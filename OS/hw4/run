@@ -1,0 +1,98 @@
+#!/bin/bash
+# Simple File System Evaluation Script v0.1 - 2019-12
+#
+SRC=~ksilab/oshw4
+SFS=~ksilab/oshw4/sfs
+HEADER="$SRC/sfs_disk.h $SRC/sfs_func.h $SRC/sfs.h $SRC/sfs_types.h"
+DFILES="$SRC/2sfs $SRC/3sfs"
+
+i="../$1"
+
+echo " "
+echo "+++ Evaluating $1"
+if ! [ -d $i ]; then 
+	echo ">>> $i doesn't exist"
+	exit; 
+fi 
+echo "*******   $i **********"
+
+if ! [ -e $i/sfs_func_hw.c ]; then
+	echo ">>>  No sfs_func_hw.c file";
+	echo -n "*** Leaving **** $i ****"; read NEXT;
+	exit;
+fi
+
+cp $i/sfs_func_hw.c .
+rm -f a.out ; 
+echo "+++ Compiling $i - sfs_func_hw.c";
+cp -a $HEADER $DFILES .
+gcc $SRC/sfs_disk.c sfs_func_hw.c $SRC/sfs_main.c $SRC/sfs_func_ext.o 
+
+
+if [ -e a.out ]; then 
+    echo ">>> $i - sfs_func_hw.c comp OK"; 
+else 
+    echo ">>> $i - sfs_func_hw.c ======= COMP FAIL"; 
+	echo -n "*** Leaving **** $i ****"; read NEXT;
+	exit;
+fi
+
+echo "+++ Entering Script Test +++++++++"; 
+echo "+++ for each script, stdin output file for a.out = out.Student"
+echo "+++                  stdin output file for sfs = out.SFS"
+echo "+++                  diff out.Student out.SFS > out.diff"
+echo -n "+++ continue? type any key"; read NEXT;
+echo " "
+
+	for script in test_lscd test_mkdir test_touch test_rmdir test_rm test_mv test_stress_dir test_full_cmds test_cpin test_cpout test_cpin_full
+	do
+		echo "++++++++ "$script ++++++++++++;
+	#	if ! [ -e $script ]; then echo "not a file"; fi
+	rm -f out.Student out.SFS out.diff
+	
+	case "$script" in 
+	test_lscd) dimg=DISK1.img ;;
+	test_mkdir) dimg=DISK1.img ;;
+	test_touch) dimg=DISK1.img ;;
+	test_rmdir) dimg=DISK1.img ;;
+	test_rm) dimg=DISK1.img ;;
+	test_mv) dimg=DISK1.img ;;
+	test_stress_dir) dimg=DISK1.img ;;
+	test_full_cmds) dimg=DISKFull.img;;
+	test_cpin) dimg=DISK1.img ;;
+	test_cpout) dimg=DISK1.img ;;
+	test_cpin_full) dimg=DISK2.img ;;
+	*) echo "Invalid option $script" ;;
+	esac
+	
+	rm -f ok12sfs ok22sfs
+	cp $SRC/$dimg $dimg
+	echo "+++ Executing sfs < $SRC/$script"
+	$SFS < $SRC/$script > out.SFS
+	mv $dimg $dimg.sfs
+	
+	rm -f ok12sfs ok22sfs
+	cp $SRC/$dimg $dimg
+	echo "+++ Executing a.out < $SRC/$script"
+	./a.out < $SRC/$script > out.Student
+	diff out.SFS out.Student > out.diff
+	
+	if [ "$script" == "test_cpout" ];
+	then
+		echo ">>> diff 2sfs ok12sfs"
+		ls -l 2sfs ok12sfs
+		diff 2sfs ok12sfs
+	fi
+	
+	echo " "
+	echo ">>> diff DISK img ( diff $dimg.sfs $dimg )"
+	diff $dimg.sfs $dimg
+	echo " "
+	ls -l out.SFS out.Student out.diff
+	
+	echo -n "+++ continue to the next script? type any key"; read NEXT;
+	echo " "
+	done #script loop
+
+echo -n "*** Leaving **** $i? ****"; read NEXT;
+rm -f out.SFS out.Student out.diff DISK1.img DISK1.img.sfs DISK2.img DISK2.img.sfs DISKFull.img DISKFull.img.sfs

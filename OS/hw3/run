@@ -1,0 +1,183 @@
+#!/bin/bash
+#for i in * ; do
+#for i in sikim ; do
+#if ! [ -d $i ]; then continue; fi 
+MEMSIM=~ksilab/oshw3/memsim
+
+LIST_1="~ksilab/mtraces/bzip.trace ~ksilab/mtraces/gcc.trace ~ksilab/mtraces/sixpack.trace"
+LIST_2="~ksilab/mtraces/swim.trace ~ksilab/mtraces/random0.trace ~ksilab/mtraces/random2.trace"
+LIST_3="$LIST_1 $LIST_2"
+LIST_4="$LIST_3 $LIST_3"
+student="../$1"
+
+function EVAL_0 {
+	diff S.out A.out
+	rm  -f [AS]*.out
+}
+
+SIMTYPE="0 1 2 3"
+
+echo " "
+echo "+++ Evaluating $1"
+if ! [ -d $student ]; then 
+        echo ">>> $student doesn't exist"
+        exit; 
+fi 
+echo "*******   $student **********"
+
+if ! [ -e $student/memsimhw.c ]; then
+        echo ">>>  No memsimhw.c file";
+
+        echo -n "*** Leaving **** $student ****"; read NEXT;
+        exit;
+fi
+
+rm -f a.out *.out
+
+cp $student/memsimhw.c .
+
+#echo -n "Next? "; read NEXT;
+echo "Compiling $student - memsimhw.c";
+gcc memsimhw.c
+if [ -e a.out ]; then 
+	echo " "
+    echo "$student - memsimhw.c COMPILE OK"; 
+	echo " "
+else 
+    echo "$student - memsimhw.c ======= COMP FAIL"; 
+	echo "*** Leaving **** $student? ****"; read NEXT;
+	exit;
+fi
+	
+echo "***************************************************************************"
+echo "$student - basic test 1 - ./a.out [0123] 1 12 ~ksilab/mtraces/gcc.trace"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+echo "Running Simulation SIMTYPE = 0..."
+./a.out 0 1 12 ~ksilab/mtraces/gcc.trace > S.out
+$MEMSIM 0 1 12 ~ksilab/mtraces/gcc.trace > A.out
+EVAL_0
+echo "Running Simulation SIMTYPE = 1..."
+./a.out 1 1 12 ~ksilab/mtraces/gcc.trace  > S.out
+$MEMSIM 1 1 12 ~ksilab/mtraces/gcc.trace  > A.out
+EVAL_0
+echo "Running Simulation SIMTYPE = 2..."
+./a.out 2 2 12 ~ksilab/mtraces/gcc.trace  > S.out
+$MEMSIM 2 2 12 ~ksilab/mtraces/gcc.trace  > A.out
+EVAL_0
+echo "Running Simulation SIMTYPE = 3..."
+./a.out 3 2 12 ~ksilab/mtraces/gcc.trace  > S.out
+$MEMSIM 3 2 12 ~ksilab/mtraces/gcc.trace  > A.out
+EVAL_0
+
+echo "***************************************************************************"
+echo "$student - basic test 2 - ./a.out [0123] 1 12 ~ksilab/mtraces/random0.trace";
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+./a.out $k 1 12 ~ksilab/mtraces/random0.trace  > S.out
+$MEMSIM $k 1 12 ~ksilab/mtraces/random0.trace  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - basic test 3 - ./a.out [0123] 19 12 ~ksilab/mtraces/gcc.trace"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+./a.out $k 19 12 ~ksilab/mtraces/gcc.trace  > S.out
+$MEMSIM $k 19 12 ~ksilab/mtraces/gcc.trace  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - basic test 4 - ./a.out [0123] 19 12 ~ksilab/mtraces/random0.trace"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+./a.out $k 19 12 ~ksilab/mtraces/random0.trace  > S.out
+$MEMSIM $k 19 12 ~ksilab/mtraces/random0.trace  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - basic test 5 - ./a.out [0123] 19 12 ~ksilab/mtraces/gcc.trace ~ksilab/mtraces/gcc.trace"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+./a.out  $k 19 12 ~ksilab/mtraces/gcc.trace ~ksilab/mtraces/gcc.trace  > S.out
+$MEMSIM  $k 19 12 ~ksilab/mtraces/gcc.trace ~ksilab/mtraces/gcc.trace  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - normal test 1 - ./a.out [0123] 8 21 $LIST_1"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+eval ./a.out  $k 8 21 $LIST_1  > S.out
+eval $MEMSIM  $k 8 21 $LIST_1  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - normal test 2 - ./a.out [0123] 9 20 $LIST_3"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+eval ./a.out  $k 9 20 $LIST_3  > S.out
+eval $MEMSIM  $k 9 20 $LIST_3  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - normal test 3 - ./a.out [0123] 7 19 $LIST_3"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+eval ./a.out  $k 7 19 $LIST_3  > S.out
+eval $MEMSIM  $k 7 19 $LIST_3  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - stress test 1 - ./a.out [0123] 10 22 $LIST_4"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+eval ./a.out  $k 10 22 $LIST_4  > S.out
+eval $MEMSIM  $k 10 22 $LIST_4  > A.out
+EVAL_0
+done
+
+echo "***************************************************************************"
+echo "$student - stress test 2 - ./a.out [0123] 10 32 $LIST_1"
+echo "***************************************************************************"
+echo -n "Next? "; read NEXT; rm -f [AS]*.out
+for k in $SIMTYPE
+do
+echo "Running Simulation SIMTYPE = $k..."
+eval ./a.out  $k 10 18 $LIST_1  > S.out
+eval $MEMSIM  $k 10 18 $LIST_1  > A.out
+EVAL_0
+done
+
+echo "*** Leaving **** $student? ****"; read NEXT;
+
+#done

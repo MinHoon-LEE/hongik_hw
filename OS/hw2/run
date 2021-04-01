@@ -1,0 +1,81 @@
+#!/bin/bash
+# run script for tests and evaluations
+# backup your homework files before using this script!!!
+# Usage : run directory_name_where_schedulehw.c_is
+# 
+
+i="../$1"
+CPUSCH=~ksilab/oshw2/cpuSch
+
+echo " "
+echo "+++ Evaluating $1"
+if ! [ -d $i ]; then 
+        echo ">>> $i doesn't exist"
+        exit; 
+fi 
+echo "*******   $i **********"
+
+if ! [ -e $i/schedulehw.c ]; then
+        echo ">>>  No schedulehw.c file";
+        echo -n "*** Leaving **** $i ****"; read NEXT;
+        exit;
+fi
+
+rm -f a.out
+
+cp $i/schedulehw.c .
+
+#echo -n "Next? "; read NEXT;
+echo "Compiling $i - schedulehw.c";
+gcc schedulehw.c
+if [ -e a.out ]; then 
+	echo " "
+    echo "$i - schedulehw.c COMPILE OK"; 
+	echo " "
+else 
+    echo "$i - schedulehw.c =======>COMPILE FAIL"; 
+	echo -n "*** Leaving **** $i ****"; read NEXT;
+	exit;
+fi
+
+# SCHEDULING_METHOD NPROC NIOREQ QUANTUM 
+# MIN_INT_ARRTIME MAX_INT_ARRTIME        
+# MIN_SERVTIME MAX_SERVTIME       
+# MIN_IO_SERVTIME MAX_IO_SERVTIME 
+# MIN_IOREQ_INT_ARRTIME
+PARAM0="10 10 3   1 10   1 10   1 10   1"
+PARAM1="1000 1000 5   1 100   10 100   10 1000   10"
+PARAM2="1000 10000 5   1 100   10 100   10 1000   2"
+PARAM3="10000 10000 50   10 1000   100 1000   1000 100000  10"
+PARAM4="1000 10000 5   1 10   100 1000   1000 100000  10"
+PARAM5="5000 1000 2   1 10   10 100   1 10   10"
+#PARAM6="1000 1000 5   1 100   10 100   10 100   10"
+#PARAM7="1000 1000 5   1 100   10 100   10 100   10"
+#PARAM8="1000 1000 5   1 100   10 100   10 100   10"
+#PARAM9="1000 1000 5   1 100   10 100   10 100   10"
+PARAM_INDEX="PARAM0 PARAM1 PARAM2 PARAM3 PARAM4 PARAM5"
+#PARAM_INDEX="PARAM4"
+SCHTYPE="1 2 3 4 5"
+#SCHTYPE="4"
+
+ntest=0
+for param in $PARAM_INDEX
+do
+	echo "${param} = All Schedule Methods + "${!param}	# variable indirection
+	echo "***************************************************************************"
+	echo "$i - basic test $ntest - ./a.out with [1 2 3 4 5] and ${!param}	"
+	echo "***************************************************************************"
+	echo -n "Next? "; read NEXT; rm -f [AS].out
+	for k in $SCHTYPE
+	do
+		echo ""
+		echo "**** Running Simulation SCHTYPE = $k ****"
+		./a.out  $k ${!param}
+		echo "==============="
+		$CPUSCH $k ${!param}
+	done
+	((ntest=ntest+1))
+	echo ""; echo ""
+done
+echo -n "*** Leaving **** $i? ****"; read NEXT;
+
